@@ -18,6 +18,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringEscapeUtils;
@@ -619,7 +620,6 @@ public class BrowserServiceImpl extends RemoteServiceServlet implements BrowserS
   @Override
   public Set<UserProfile> retrieveUserProfilePluginItems(String parameterId, String localeString) {
     Set<UserProfile> items = new HashSet<>();
-
     List<String> dropdownItems = RodaUtils
       .copyList(RodaCoreFactory.getRodaConfiguration().getList("core.plugins.user_profile." + parameterId + "[]"));
     Locale locale = ServerTools.parseLocale(localeString);
@@ -636,7 +636,6 @@ public class BrowserServiceImpl extends RemoteServiceServlet implements BrowserS
 
   private UserProfile retrieveUserProfileItem(String item, String pluginName, Set<UserProfile> items, Messages messages) {
     UserProfile userProfile = new UserProfile();
-    Map<String, String> optionsValues = new HashMap<>();
 
     userProfile.setI18nProperty(RodaCoreFactory.getRodaConfiguration()
       .getString("core.plugins." + pluginName + "." + item + ".title"));
@@ -645,11 +644,24 @@ public class BrowserServiceImpl extends RemoteServiceServlet implements BrowserS
     userProfile.setProfile(item);
 
     String[] options = RodaCoreFactory.getRodaConfiguration().getStringArray("core.plugins." + pluginName + "." + item + ".options[]");
-    for(String option : options){
-      String optionValue = RodaCoreFactory.getRodaConfiguration().getString("core.plugins." + pluginName + "." + item + "." + option);
-      optionsValues.put(option, optionValue);
+
+    if (item.equals("custom")) {
+      Map<String, List<String>> controlledVocabularyValues = new HashMap<>();
+      for (String option : options) {
+        List<String> optionValue = RodaCoreFactory.getRodaConfiguration().getList("core.plugins." + pluginName + "." + item + "." + option).stream()
+          .map(Object::toString)
+          .collect(Collectors.toList());
+        controlledVocabularyValues.put(option, optionValue);
+      }
+      userProfile.setControlledVocabulary(controlledVocabularyValues);
+    } else {
+      Map<String, String> optionsValues = new HashMap<>();
+      for (String option : options) {
+        String optionValue = RodaCoreFactory.getRodaConfiguration().getString("core.plugins." + pluginName + "." + item + "." + option);
+        optionsValues.put(option, optionValue);
+      }
+      userProfile.setOptions(optionsValues);
     }
-    userProfile.setOptions(optionsValues);
 
     return userProfile;
   }

@@ -32,6 +32,7 @@ import org.roda.core.data.v2.risks.IndexedRisk;
 import org.roda.core.data.v2.risks.SeverityLevel;
 import org.roda.wui.client.browse.BrowserService;
 import org.roda.wui.client.browse.bundle.RepresentationInformationFilterBundle;
+import org.roda.wui.client.common.ConversionProfilePanel;
 import org.roda.wui.client.common.IncrementalAssociativeList;
 import org.roda.wui.client.common.dialogs.SelectAipDialog;
 import org.roda.wui.client.common.utils.PluginUtils;
@@ -470,8 +471,51 @@ public class PluginParameterPanel extends Composite {
     addHelp();
   }
 
+  private void createOptionsLayout(final UserProfile userProfile, ConversionProfilePanel conversionProfilePanel) {
+    if (userProfile.getProfile().equals("custom")) {
+      userProfile.getControlledVocabulary().forEach((conversionParameter, values) -> {
+        final ListBox dropdown = new ListBox();
+        dropdown.setName(conversionParameter);
+        dropdown.addStyleName(FORM_SELECTBOX);
+        dropdown.addStyleName(FORM_TEXTBOX_SMALL);
+        for (String value : values) {
+          dropdown.addItem(value);
+        }
+        conversionProfilePanel.add(dropdown);
+      });
+      // conversionProfilePanel.addProfilePanel(userProfile.getProfile(),
+      // parameterPanel);
+    } else {
+      userProfile.getOptions().forEach((conversionParameter, value) -> {
+        final ListBox dropdown = new ListBox();
+        Label parameterName = new Label();
+        Label parameterDescription = new Label();
+        Label description = new Label();
+        FlowPanel conversionParametersPanel = new FlowPanel();
+        dropdown.setName(conversionParameter);
+        dropdown.addStyleName(FORM_SELECTBOX);
+        dropdown.addStyleName(FORM_TEXTBOX_SMALL);
+        dropdown.addItem(value);
+        dropdown.setEnabled(false);
+        conversionParametersPanel.add(dropdown);
+        parameterName.setText(conversionParameter);
+        parameterDescription.setText("Description");
+        description.setText("description");
+        // parameterPanel.setPanel(conversionParametersPanel);
+        // parameterPanel.setParameterName(parameterName);
+        // parameterPanel.setDescription(description);
+        // parameterPanel.setParameterDescription(parameterDescription);
+      });
+      // conversionProfilePanel.addProfilePanel(userProfile.getProfile(),
+      // parameterPanel);
+    }
+
+  }
+
   private void createConversionProfileLayout() {
+    ConversionProfilePanel conversionPanel = new ConversionProfilePanel();
     Set<UserProfile> treeSet = new HashSet<>();
+
     Label parameterName = new Label(parameter.getName());
     final Label description = new Label();
     final ListBox dropdown = new ListBox();
@@ -492,9 +536,30 @@ public class PluginParameterPanel extends Composite {
         public void onSuccess(Set<UserProfile> result) {
           treeSet.addAll(result);
           for (UserProfile item : treeSet) {
+            GWT.log(item.toString());
             dropdown.addItem(item.getI18nProperty(), item.getProfile());
             description.setText(item.getDescription());
             description.addStyleName(FORM_HELP);
+            /*if (item.getProfile().equals("custom")){
+              item.getControlledVocabulary().forEach((key, value) -> {
+                System.out.println("Key: " + key + ", Value: " + value)
+              });
+            }
+            else {
+
+            }
+
+             */
+
+          }
+          if(parameter.getName().equals("User profile")) {
+            panel.add(dropdown);
+            panel.add(description);
+            panel.addStyleName("conversion-profile");
+            dropdown.setTitle(OBJECT_BOX);
+            layout.add(parameterName);
+            addHelp();
+            layout.add(panel);
           }
 
           value = dropdown.getSelectedValue();
@@ -517,14 +582,6 @@ public class PluginParameterPanel extends Composite {
       }
     });
 
-    panel.add(dropdown);
-    panel.add(description);
-    panel.addStyleName("conversion-profile");
-
-    dropdown.setTitle(OBJECT_BOX);
-    layout.add(parameterName);
-    addHelp();
-    layout.add(panel);
   }
 
   private void createPluginObjectFieldsLayout(final String className) {

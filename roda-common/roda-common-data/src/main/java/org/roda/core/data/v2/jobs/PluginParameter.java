@@ -421,7 +421,8 @@ public class PluginParameter implements Serializable {
     /**
      * Interface to conversion plugins
      */
-    CONVERSION
+    CONVERSION,
+
   }
 
   public static class PluginParameterBuilder {

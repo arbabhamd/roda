@@ -9,6 +9,7 @@ package org.roda.core.data.v2.common;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -20,9 +21,13 @@ public class UserProfile implements Serializable {
   private String profile;
   private String description;
   private Map<String, String> options;
+  private Map<String, List<String>> controlledVocabulary;
 
   public UserProfile() {
+
     options = new HashMap<>();
+    controlledVocabulary = new HashMap<>();
+
   }
 
   public void setI18nProperty(String i18nProperty) {
@@ -55,5 +60,13 @@ public class UserProfile implements Serializable {
 
   public Map<String, String> getOptions() {
     return options;
+  }
+
+  public Map<String, List<String>> getControlledVocabulary() {
+    return controlledVocabulary;
+  }
+
+  public void setControlledVocabulary(Map<String, List<String>> controlledVocabulary) {
+    this.controlledVocabulary = controlledVocabulary;
   }
 }
