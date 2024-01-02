@@ -132,11 +132,47 @@ public class PluginParameterPanel extends Composite {
       createConversionProfileLayout();
     } else if (PluginParameterType.CONVERSION.equals(parameter.getType())) {
       createConversionLayout();
+    } else if (PluginParameterType.CONTROLLED_VOCABULARY.equals(parameter.getType())) {
+      createControlledVocabularyLayout();
     } else {
       LOGGER
         .warn("Unsupported plugin parameter type: " + parameter.getType() + ". Reverting to default parameter editor.");
       createStringLayout(parameter);
     }
+  }
+
+  private void createControlledVocabularyLayout() {
+    Label parameterName = new Label(parameter.getName());
+    final ListBox dropdown = new ListBox();
+    dropdown.addStyleName(FORM_SELECTBOX);
+    dropdown.addStyleName(FORM_TEXTBOX_SMALL);
+
+    BrowserService.Util.getInstance().retrieveControlledVocabularyItems(parameter.getControlledVocabularyKey(),
+      new AsyncCallback<List<String>>() {
+
+        @Override
+        public void onFailure(Throwable caught) {
+          // do nothing
+        }
+
+        @Override
+        public void onSuccess(List<String> result) {
+          List<String> treeSet = new ArrayList<>(result);
+
+          for (String item : treeSet) {
+            dropdown.addItem(item, item);
+          }
+
+          value = dropdown.getSelectedValue();
+        }
+      });
+
+    dropdown.addChangeHandler(event -> value = dropdown.getSelectedValue());
+
+    dropdown.setTitle(OBJECT_BOX);
+    layout.add(parameterName);
+    layout.add(dropdown);
+    addHelp();
   }
 
   private void createConversionLayout() {

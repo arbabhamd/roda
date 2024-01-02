@@ -599,6 +599,10 @@ public class BrowserServiceImpl extends RemoteServiceServlet implements BrowserS
     return classNames;
   }
 
+  public List<String> retrieveControlledVocabularyItems(String controlledVocabularyKey) {
+    return RodaUtils.copyList(RodaCoreFactory.getRodaConfiguration().getList(controlledVocabularyKey));
+  }
+
   @Override
   public Set<Pair<String, String>> retrieveDropdownPluginItems(String parameterId, String localeString) {
     Set<Pair<String, String>> items = new HashSet<>();

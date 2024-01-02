@@ -10,11 +10,7 @@
  */
 package org.roda.wui.client.browse;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import org.roda.core.data.v2.accessKey.AccessKey;
 import org.roda.core.data.v2.accessKey.AccessKeys;
 import org.roda.core.data.v2.common.Pair;
@@ -74,7 +70,10 @@ import org.roda.wui.client.planning.RelationTypeTranslationsBundle;
 import org.roda.wui.client.planning.RiskMitigationBundle;
 import org.roda.wui.client.planning.RiskVersionsBundle;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Luis Faria
@@ -137,6 +136,9 @@ public interface BrowserServiceAsync {
 
   void retrieveDropdownPluginItems(String parameterId, String localeString,
     AsyncCallback<Set<Pair<String, String>>> asyncCallback);
+
+  void retrieveControlledVocabularyItems(String controlledVocabularyKey,
+                                         AsyncCallback<List<String>> asyncCallback);
 
   void retrieveUserProfilePluginItems(String parameterId, String localeString,
                                    AsyncCallback<Set<UserProfile>> asyncCallback);

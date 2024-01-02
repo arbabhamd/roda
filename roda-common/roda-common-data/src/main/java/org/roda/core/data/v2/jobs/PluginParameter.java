@@ -27,6 +27,7 @@ public class PluginParameter implements Serializable {
   private boolean readonly = false;
   private String description = null;
   private RenderingHints renderingHings = null;
+  private String controlledVocabularyKey;
 
   /**
    * Constructs an empty {@link PluginParameter}.
@@ -50,6 +51,7 @@ public class PluginParameter implements Serializable {
     this.mandatory = builder.mandatory;
     this.readonly = builder.readOnly;
     this.description = builder.description;
+    this.controlledVocabularyKey = builder.controlledVocabularyKey;
   }
 
   /**
@@ -339,6 +341,14 @@ public class PluginParameter implements Serializable {
     this.renderingHings = renderingHings;
   }
 
+  public String getControlledVocabularyKey() {
+    return controlledVocabularyKey;
+  }
+
+  public void setControlledVocabularyKey(String controlledVocabularyKey) {
+    this.controlledVocabularyKey = controlledVocabularyKey;
+  }
+
   public enum PluginParameterType {
     /**
      * Normal string
@@ -421,7 +431,12 @@ public class PluginParameter implements Serializable {
     /**
      * Interface to conversion plugins
      */
-    CONVERSION
+    CONVERSION,
+
+    /**
+     * Interface to conversion plugins
+     */
+    CONTROLLED_VOCABULARY
   }
 
   public static class PluginParameterBuilder {
@@ -437,6 +452,7 @@ public class PluginParameter implements Serializable {
     private boolean mandatory = true;
     private boolean readOnly = false;
     private String description = null;
+    private String controlledVocabularyKey;
 
     public PluginParameterBuilder(String id, String name, PluginParameter.PluginParameterType type) {
       this.id = id;
@@ -470,6 +486,11 @@ public class PluginParameter implements Serializable {
 
     public PluginParameterBuilder withDescription(String description) {
       this.description = description;
+      return this;
+    }
+
+    public PluginParameterBuilder withControlledVocabularyKey(String controlledVocabulary) {
+      this.controlledVocabularyKey = controlledVocabularyKey;
       return this;
     }
   }
