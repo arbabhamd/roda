@@ -7,13 +7,31 @@
  */
 package org.roda.wui.client.ingest.process;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Document;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.DomEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.i18n.client.LocaleInfo;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
+import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Element;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Anchor;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.CheckBox;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.HTMLPanel;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.IntegerBox;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.RadioButton;
+import com.google.gwt.user.client.ui.TextBox;
+import config.i18n.client.ClientMessages;
 import org.roda.core.data.common.RodaConstants;
 import org.roda.core.data.utils.RepresentationInformationUtils;
 import org.roda.core.data.v2.common.Pair;
@@ -41,30 +59,12 @@ import org.roda.wui.common.client.ClientLogger;
 import org.roda.wui.common.client.tools.DescriptionLevelUtils;
 import org.roda.wui.common.client.tools.StringUtils;
 
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.Document;
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ChangeHandler;
-import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.dom.client.DomEvent;
-import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.gwt.i18n.client.LocaleInfo;
-import com.google.gwt.safehtml.shared.SafeHtmlUtils;
-import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.Anchor;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.CheckBox;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.HTMLPanel;
-import com.google.gwt.user.client.ui.HorizontalPanel;
-import com.google.gwt.user.client.ui.IntegerBox;
-import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.RadioButton;
-import com.google.gwt.user.client.ui.TextBox;
-
-import config.i18n.client.ClientMessages;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class PluginParameterPanel extends Composite {
   public static final String FORM_SELECTBOX = "form-selectbox";
@@ -80,17 +80,35 @@ public class PluginParameterPanel extends Composite {
   private static final String ADD_TYPE = "#__ADDNEW__#";
   private final PluginParameter parameter;
   private final FlowPanel layout;
+  private final FlowPanel globalLayout;
   private final RepresentationParameter representationParameter = new RepresentationParameter();
   private final DisseminationParameter disseminationParameter = new DisseminationParameter();
   private String value;
   private String aipTitle;
   private boolean conversionPanel = false;
-
+  private boolean updatedFlag = false;
   public PluginParameterPanel(PluginParameter parameter) {
     super();
     this.parameter = parameter;
 
     layout = new FlowPanel();
+
+    globalLayout = null;
+
+    initWidget(layout);
+
+    updateLayout();
+
+    layout.addStyleName("plugin-options-parameter");
+  }
+
+  public PluginParameterPanel(PluginParameter parameter, FlowPanel globalLayout) {
+    super();
+    this.parameter = parameter;
+
+    layout = new FlowPanel();
+
+    this.globalLayout = globalLayout;
 
     initWidget(layout);
 
@@ -133,7 +151,7 @@ public class PluginParameterPanel extends Composite {
     } else if (PluginParameterType.CONVERSION.equals(parameter.getType())) {
       createConversionLayout();
     } else if (PluginParameterType.CONTROLLED_VOCABULARY.equals(parameter.getType())) {
-      createControlledVocabularyLayout();
+      createControlledVocabularyLayout(parameter);
     } else {
       LOGGER
         .warn("Unsupported plugin parameter type: " + parameter.getType() + ". Reverting to default parameter editor.");
@@ -141,7 +159,8 @@ public class PluginParameterPanel extends Composite {
     }
   }
 
-  private void createControlledVocabularyLayout() {
+  private void createControlledVocabularyLayout(PluginParameter parameter) {
+    FlowPanel panel = new FlowPanel();
     Label parameterName = new Label(parameter.getName());
     final ListBox dropdown = new ListBox();
     dropdown.addStyleName(FORM_SELECTBOX);
@@ -163,16 +182,22 @@ public class PluginParameterPanel extends Composite {
             dropdown.addItem(item, item);
           }
 
+          if (parameter.isReadonly()) {
+            dropdown.setEnabled(false);
+          }
+
           value = dropdown.getSelectedValue();
         }
       });
-
     dropdown.addChangeHandler(event -> value = dropdown.getSelectedValue());
 
     dropdown.setTitle(OBJECT_BOX);
-    layout.add(parameterName);
-    layout.add(dropdown);
-    addHelp();
+    panel.add(parameterName);
+    panel.add(dropdown);
+    panel.getElement().setId(parameter.getId());
+    addHelp(panel, parameter.getDescription());
+    layout.add(panel);
+    //addHelp();
   }
 
   private void createConversionLayout() {
@@ -548,6 +573,33 @@ public class PluginParameterPanel extends Composite {
       for (UserProfile userProfile : treeSet) {
         if (userProfile.getProfile().equals(value)) {
           description.setText(userProfile.getDescription());
+          List<PluginParameter> controlledParameters = parameter.getControlledParameters();
+          for (PluginParameter controlledParameter : controlledParameters) {
+            String parameterID = controlledParameter.getId();//parameter.compression
+            if (userProfile.getOptions().get(parameterID) != null) {
+              if (userProfile.getProfile().equals("custom")) {
+                //controlledParameter.setType(PluginParameterType.STRING);
+                controlledParameter.setReadonly(false);
+                controlledParameter.setDefaultValue(userProfile.getOptions().get(parameterID));
+                Element element = DOM.getElementById(parameterID);
+                if (element != null) {
+                  element.removeFromParent();
+                }
+                createControlledVocabularyLayout(controlledParameter);
+              } else {
+                //controlledParameter.setType(PluginParameterType.CONTROLLED_VOCABULARY);
+                controlledParameter.setReadonly(true);
+                controlledParameter.setDefaultValue(userProfile.getOptions().get(parameterID));
+                Element element = DOM.getElementById(parameterID);
+                if (element != null) {
+                  element.removeFromParent();
+                }
+                createControlledVocabularyLayout(controlledParameter);
+              }
+            }
+
+          }
+
           break;
         }
       }
@@ -742,6 +794,7 @@ public class PluginParameterPanel extends Composite {
 
     FlowPanel textBoxLayout = createTextBoxLayout(parameter.getName(), parameter.getDefaultValue(),
       parameter.getDescription(), parameter.isReadonly(), changeHandler);
+    textBoxLayout.getElement().setId(parameter.getId());
     layout.add(textBoxLayout);
   }
 

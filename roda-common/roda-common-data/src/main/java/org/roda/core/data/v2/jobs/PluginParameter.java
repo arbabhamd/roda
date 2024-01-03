@@ -27,7 +27,9 @@ public class PluginParameter implements Serializable {
   private boolean readonly = false;
   private String description = null;
   private RenderingHints renderingHings = null;
-  private String controlledVocabularyKey;
+  private String controlledVocabularyKey = null;
+
+  private List<PluginParameter> controlledParameters = null;
 
   /**
    * Constructs an empty {@link PluginParameter}.
@@ -52,6 +54,7 @@ public class PluginParameter implements Serializable {
     this.readonly = builder.readOnly;
     this.description = builder.description;
     this.controlledVocabularyKey = builder.controlledVocabularyKey;
+    this.controlledParameters = builder.controlledParameters;
   }
 
   /**
@@ -349,6 +352,10 @@ public class PluginParameter implements Serializable {
     this.controlledVocabularyKey = controlledVocabularyKey;
   }
 
+  public List<PluginParameter> getControlledParameters() {
+    return controlledParameters;
+  }
+
   public enum PluginParameterType {
     /**
      * Normal string
@@ -452,7 +459,8 @@ public class PluginParameter implements Serializable {
     private boolean mandatory = true;
     private boolean readOnly = false;
     private String description = null;
-    private String controlledVocabularyKey;
+    private String controlledVocabularyKey = null;
+    private List<PluginParameter> controlledParameters = null;
 
     public PluginParameterBuilder(String id, String name, PluginParameter.PluginParameterType type) {
       this.id = id;
@@ -489,8 +497,13 @@ public class PluginParameter implements Serializable {
       return this;
     }
 
-    public PluginParameterBuilder withControlledVocabularyKey(String controlledVocabulary) {
+    public PluginParameterBuilder withControlledVocabularyKey(String controlledVocabularyKey) {
       this.controlledVocabularyKey = controlledVocabularyKey;
+      return this;
+    }
+
+    public PluginParameterBuilder withControlledParameters(List<PluginParameter> controlledParameters) {
+      this.controlledParameters = controlledParameters;
       return this;
     }
   }

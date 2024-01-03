@@ -43,7 +43,7 @@ public class PluginOptionsPanel extends Composite {
     if (pluginInfo != null) {
 
       for (PluginParameter parameter : pluginInfo.getParameters()) {
-        PluginParameterPanel panel = new PluginParameterPanel(parameter);
+        PluginParameterPanel panel = new PluginParameterPanel(parameter, layout);
         panels.add(panel);
         layout.add(panel);
       }
