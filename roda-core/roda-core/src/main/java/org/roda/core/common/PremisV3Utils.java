@@ -183,6 +183,33 @@ public final class PremisV3Utils {
 
   }
 
+  public static void updateTechnicalMetadata(gov.loc.premis.v3.File file, String creatingApplicationName,
+    String creatingApplicationVersion, String dateCreatedByApplication) {
+
+
+
+
+    // ExtensionComplexType complexType;
+
+    /*
+     * for(ObjectCharacteristicsComplexType e : file.getObjectCharacteristics()) {
+     * for (ExtensionComplexType o : e.getObjectCharacteristicsExtension()) {
+     * 
+     * } }
+     * 
+     */
+
+    ExtensionComplexType complexType = FACTORY.createExtensionComplexType();
+    complexType.getAny().add(
+      "<metadata type=featureExtractor featureExtratorType=tika featureExtratorVersion=1 digest=\"f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2\" digestAlg=\"SHA-256\">");
+    ObjectCharacteristicsComplexType occt = FACTORY.createObjectCharacteristicsComplexType();
+    occt.getObjectCharacteristicsExtension().add(complexType);
+
+    // complexType.getAny().add(formatRegistry);
+    // file.getObjectCharacteristics().add(file.)
+
+  }
+
   public static void updateCreatingApplication(gov.loc.premis.v3.File file, String creatingApplicationName,
     String creatingApplicationVersion, String dateCreatedByApplication) {
     if (StringUtils.isNotBlank(creatingApplicationName)) {
@@ -206,6 +233,23 @@ public final class PremisV3Utils {
     CreatingApplicationComplexType cact;
     if (f.getObjectCharacteristics() == null || f.getObjectCharacteristics().isEmpty()) {
       f.getObjectCharacteristics().add(FACTORY.createObjectCharacteristicsComplexType());
+    }
+    occt = f.getObjectCharacteristics().get(0);
+
+    if (occt.getCreatingApplication() == null || occt.getCreatingApplication().isEmpty()) {
+      occt.getCreatingApplication().add(FACTORY.createCreatingApplicationComplexType());
+    }
+    cact = occt.getCreatingApplication().get(0);
+
+    return cact;
+  }
+
+  private static CreatingApplicationComplexType getTechnicalMetadata(gov.loc.premis.v3.File f) {
+    ObjectCharacteristicsComplexType occt;
+    CreatingApplicationComplexType cact;
+    if (f.getObjectCharacteristics() == null || f.getObjectCharacteristics().isEmpty()) {
+      ExtensionComplexType extensionComplexType = FACTORY.createExtensionComplexType();
+      f.getObjectCharacteristics().add(FACTORY.create);
     }
     occt = f.getObjectCharacteristics().get(0);
 
@@ -1031,6 +1075,37 @@ public final class PremisV3Utils {
 
       ContentPayload premisFilePayload = fileToBinary(premisFile);
       model.updatePreservationMetadata(id, type, aipId, representationId, fileDirectoryPath, fileId, premisFilePayload,
+        username, notify);
+    } catch (RODAException | IOException e) {
+      LOGGER.error("PREMIS will not be updated due to an error", e);
+    }
+  }
+
+  public static void updateCreatingApplicationTechincalMetadata(ModelService model, String aipId,
+    String representationId, List<String> fileDirectoryPath, String fileId, String type,
+    String featureExtractor, String featureExtractorVersion, String username, boolean notify) {
+    Binary premisBin;
+
+    try {
+      try {
+        premisBin = model.retrievePreservationFile(aipId, representationId, fileDirectoryPath, fileId);
+      } catch (NotFoundException e) {
+        LOGGER.debug("PREMIS object skeleton does not exist yet. Creating PREMIS object!");
+        List<String> algorithms = RodaCoreFactory.getFixityAlgorithms();
+        PremisSkeletonPluginUtils.createPremisSkeletonOnRepresentation(model, aipId, representationId, algorithms,
+          username);
+        premisBin = model.retrievePreservationFile(aipId, representationId, fileDirectoryPath, fileId);
+        LOGGER.debug("PREMIS object skeleton created");
+      }
+
+      gov.loc.premis.v3.File premisFile = binaryToFile(premisBin.getContent(), false);
+      PremisV3Utils.updateTechnicalMetadata(premisFile, type, featureExtractor,
+        featureExtractorVersion);
+      PreservationMetadataType pmtype = PreservationMetadataType.FILE;
+      String id = IdUtils.getPreservationFileId(fileId, RODAInstanceUtils.getLocalInstanceIdentifier());
+
+      ContentPayload premisFilePayload = fileToBinary(premisFile);
+      model.updatePreservationMetadata(id, pmtype, aipId, representationId, fileDirectoryPath, fileId, premisFilePayload,
         username, notify);
     } catch (RODAException | IOException e) {
       LOGGER.error("PREMIS will not be updated due to an error", e);
